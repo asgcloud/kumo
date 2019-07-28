@@ -10,6 +10,7 @@ import (
 	"github.com/asgcloud/kumo/db"
 )
 
+// TODO: Delete and refer to real values from environment variables
 const (
 	host     = "localhost"
 	port     = 5432
