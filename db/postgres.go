@@ -12,6 +12,15 @@ type PostgresRepository struct {
 	db *sql.DB
 }
 
+// NewPostgres connects to a new session of postgres
+func NewPostgres(url string) (*PostgresRepository, error) {
+	db, err := sql.Open("postgres", url)
+	if err != nil {
+		return nil, err
+	}
+	return &PostgresRepository{db}, nil
+}
+
 // Close closes the database connection
 func (r *PostgresRepository) Close() {
 	r.db.Close()
@@ -27,9 +36,9 @@ func (r *PostgresRepository) InsertServer(ctx context.Context, server schema.Ser
 }
 
 // ListServers lists all servers
-func (r *PostgresRepository) ListServers(ctx context.Context, uint64 skip, uint64 take) ([]schema.Server, error) {
+func (r *PostgresRepository) ListServers(ctx context.Context, skip uint64, take uint64) ([]schema.Server, error) {
 	servers := []schema.Server{}
-	rows, err := r.db.Query("SELECT * FROM servers")
+	rows, err := r.db.Query("SELECT * FROM servers ORDER BY id DESC OFFSET $1 LIMIT $2", skip, take)
 	if err != nil {
 		return nil, err
 	}
