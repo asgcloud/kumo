@@ -28,7 +28,7 @@ func (r *PostgresRepository) Close() {
 
 // InsertServer adds a new server to the database
 func (r *PostgresRepository) InsertServer(ctx context.Context, server schema.Server) error {
-	_, err := r.db.Query("INSERT INTO servers (id, name) VALUES ($1, $2)", server.ID, server.Name)
+	_, err := r.db.Query("INSERT INTO servers (server_id, server_name) VALUES ($1, $2)", server.ID, server.Name)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (r *PostgresRepository) InsertServer(ctx context.Context, server schema.Ser
 // ListServers lists all servers
 func (r *PostgresRepository) ListServers(ctx context.Context, skip uint64, take uint64) ([]schema.Server, error) {
 	servers := []schema.Server{}
-	rows, err := r.db.Query("SELECT * FROM servers ORDER BY id DESC OFFSET $1 LIMIT $2", skip, take)
+	rows, err := r.db.Query("SELECT * FROM servers ORDER BY server_id DESC OFFSET $1 LIMIT $2", skip, take)
 	if err != nil {
 		return nil, err
 	}
