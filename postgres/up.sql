@@ -3,10 +3,13 @@ DROP TABLE IF EXISTS servers;
 CREATE TABLE servers
 (
     server_id uuid DEFAULT uuid_generate_v4 (),
-    server_name TEXT NOT NULL,
+    server_name varchar(32) NOT NULL,
     cpu INTEGER,
     memory INTEGER,
-    storage NUMERIC,
+    server_status VARCHAR(32),
+    server_state VARCHAR(32),
+    tenancy VARCHAR(32),
+    host VARCHAR(32),
     PRIMARY KEY (server_id)
 );
 
