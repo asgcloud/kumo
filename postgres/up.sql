@@ -1,31 +1,56 @@
 DROP TABLE IF EXISTS servers;
 
+CREATE TABLE projects
+(
+    project_id uuid DEFAULT uuid_generate_v4 (),
+    project_name VARCHAR(32) NOT NULL,
+    host_platform VARCHAR(32) NOT NULL,
+    host_ip VARCHAR(32),
+    host_username VARCHAR(32),
+    host_password VARCHAR(64),
+    PRIMARY KEY (project_id)
+);
+
+INSERT INTO projects
+    (project_name, host_platform)
+VALUES
+    ('Test Project', 'VMware');
+
+UPDATE projects 
+SET 
+    project_id = 'f90e8097-ddac-49dd-978f-0e88bf90891e' 
+WHERE 
+    project_name = 'Test Project';
+
 CREATE TABLE servers
 (
     server_id uuid DEFAULT uuid_generate_v4 (),
-    server_name varchar(32) NOT NULL,
+    project_id uuid NOT NULL,
+    server_name VARCHAR(32) NOT NULL,
     cpu INTEGER,
-    memory INTEGER,
+    ram INTEGER,
+    storage NUMERIC,
     server_status VARCHAR(32),
     server_state VARCHAR(32),
     tenancy VARCHAR(32),
     host VARCHAR(32),
-    PRIMARY KEY (server_id)
+    PRIMARY KEY (server_id),
+    FOREIGN KEY (project_id) REFERENCES projects(project_id)
 );
 
 INSERT INTO servers
-    (server_name)
+    (project_id, server_name, cpu, ram, storage, server_status, server_state, tenancy, host)
 VALUES
-    ('CERTTR-PRD-01');
+    ('f90e8097-ddac-49dd-978f-0e88bf90891e', 'CERTTR-PRD-01', 2, 8, 32.0, 'Active', 'Powered On', 'Production', 'Azure');
 INSERT INTO servers
-    (server_name)
+    (project_id, server_name, cpu, ram, storage, server_status, server_state, tenancy, host)
 VALUES
-    ('CARDAX-PRD_01');
+    ('f90e8097-ddac-49dd-978f-0e88bf90891e', 'CARDAX-PRD_01', 2, 8, 32.0, 'Active', 'Powered On', 'Production', 'Azure');
 INSERT INTO servers
-    (server_name)
+    (project_id, server_name, cpu, ram, storage, server_status, server_state, tenancy, host)
 VALUES
-    ('SAPGDB-PRD-01');
+    ('f90e8097-ddac-49dd-978f-0e88bf90891e', 'SAPGDB-PRD-01', 2, 8, 32.0, 'Active', 'Powered On', 'Production', 'Azure');
 INSERT INTO servers
-    (server_name)
+    (project_id, server_name, cpu, ram, storage, server_status, server_state, tenancy, host)
 VALUES
-    ('TABLEU-PRD-01');
+    ('f90e8097-ddac-49dd-978f-0e88bf90891e', 'TABLEU-PRD-01', 2, 8, 32.0, 'Active', 'Powered On', 'Production', 'Azure');

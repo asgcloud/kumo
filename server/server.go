@@ -56,11 +56,11 @@ func (s *Server) HandleStatus() http.HandlerFunc {
 		s.stats.RequestsReceived++
 		s.stats.OperationsCompleted++
 		log.Printf("Request to status received")
+		s.stats.ResponsesProvided++
 		data, _ := json.Marshal(s.stats)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(data)
-		s.stats.ResponsesProvided++
 		s.stats.OperationsCompleted++
 		return
 	}

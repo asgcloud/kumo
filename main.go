@@ -31,7 +31,7 @@ func main() {
 	}
 	defer db.Close()
 
-	fmt.Println("Successfully connected to the database")
+	log.Println("Successfully connected to the database")
 	mux := mux.NewRouter()
 
 	server := server.NewServer(db, mux)

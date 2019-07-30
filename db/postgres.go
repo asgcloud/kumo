@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/asgcloud/kumo/schema"
 )
@@ -28,7 +29,7 @@ func (r *PostgresRepository) Close() {
 
 // InsertServer adds a new server to the database
 func (r *PostgresRepository) InsertServer(ctx context.Context, server schema.Server) error {
-	_, err := r.DB.Query("INSERT INTO servers (server_id, server_name) VALUES ($1, $2)", server.ID, server.Name)
+	_, err := r.DB.Query("INSERT INTO servers (server_id, server_name) VALUES ($1, $2)", server.ServerID, server.ServerName)
 	if err != nil {
 		return err
 	}
@@ -38,15 +39,17 @@ func (r *PostgresRepository) InsertServer(ctx context.Context, server schema.Ser
 // ListServers lists all servers
 func (r *PostgresRepository) ListServers(ctx context.Context, skip uint64, take uint64) ([]schema.Server, error) {
 	servers := []schema.Server{}
-	rows, err := r.DB.Query("SELECT * FROM servers ORDER BY server_id DESC OFFSET $1 LIMIT $2", skip, take)
+	//rows, err := r.DB.Query("SELECT * FROM servers ORDER BY server_id DESC OFFSET $2 LIMIT $3", skip, take)
+	rows, err := r.DB.Query("SELECT * FROM servers ORDER BY server_name")
 	if err != nil {
+		fmt.Println("ERROR!!!!!")
 		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		server := schema.Server{}
-		err := rows.Scan(&server.ID, &server.Name)
+		err := rows.Scan(&server.ServerID, &server.ProjectID, &server.ServerName, &server.CPU, &server.RAM, &server.Storage, &server.Status, &server.State, &server.Tenancy, &server.Host)
 		if err != nil {
 			return nil, err
 		}
