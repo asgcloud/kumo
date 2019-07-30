@@ -1,13 +1,14 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 
 	"github.com/asgcloud/kumo/db"
+	"github.com/asgcloud/kumo/server"
 )
 
 // TODO: Delete and refer to real values from environment variables
@@ -31,13 +32,9 @@ func main() {
 	defer db.Close()
 
 	fmt.Println("Successfully connected to the database")
+	mux := mux.NewRouter()
 
-	servers, err := db.ListServers(context.Background(), 0, 10)
-	if err != nil {
-		log.Fatalf("Could not query the server list: %v", err)
-	}
-
-	for _, server := range servers {
-		fmt.Println(server)
-	}
+	server := server.NewServer(db, mux)
+	server.AttachRoutes()
+	server.Run()
 }
