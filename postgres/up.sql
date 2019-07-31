@@ -1,4 +1,13 @@
 DROP TABLE IF EXISTS servers;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users
+(
+    user_id uuid DEFAULT uuid_generate_v4 (),
+    username VARCHAR(32) NOT NULL,
+    hash VARCHAR(64) NOT NULL,
+    PRIMARY KEY (user_id)
+);
 
 CREATE TABLE projects
 (
