@@ -5,6 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 
+	// This loads the postgres drivers.
+	_ "github.com/lib/pq"
+
 	"github.com/asgcloud/kumo/schema"
 	"github.com/asgcloud/kumo/storage"
 )

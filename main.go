@@ -12,11 +12,11 @@ import (
 )
 
 func main() {
-	configPath := flag.String("config", "./config/config.json", "path of the config file")
+	configPath := flag.String("config", "./config/config.json",
+		"path of the config file")
 
 	flag.Parse()
 
-	// Read config
 	config, err := config.FromFile(*configPath)
 	if err != nil {
 		log.Fatal(err)
