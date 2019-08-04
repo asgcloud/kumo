@@ -1,40 +1,42 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"log"
 
 	"github.com/gorilla/mux"
-	_ "github.com/lib/pq"
 
-	"github.com/asgcloud/kumo/db"
+	"github.com/asgcloud/kumo/config"
 	"github.com/asgcloud/kumo/server"
-)
-
-// TODO: Delete and refer to real values from environment variables
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "sqladmin"
-	password = "sqlpassword"
-	dbname   = "kumo"
+	"github.com/asgcloud/kumo/storage/postgres"
 )
 
 func main() {
-	fmt.Println("Hello World")
+	configPath := flag.String("config", "./config/config.json", "path of the config file")
 
-	postgres := fmt.Sprintf("host=%s port=%d user=%s password=%s "+
-		"dbname=%s sslmode=disable", host, port, user, password, dbname)
-	db, err := db.NewPostgres(postgres)
+	flag.Parse()
+
+	// Read config
+	config, err := config.FromFile(*configPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	svc, err := postgres.New(
+		config.Postgres.Host,
+		config.Postgres.Port,
+		config.Postgres.User,
+		config.Postgres.Password,
+		config.Postgres.DB)
 	if err != nil {
 		log.Fatalf("Could not connect to postgres DBMS: %v", err)
 	}
-	defer db.Close()
+	defer svc.Close()
 
 	log.Println("Successfully connected to the database")
 	mux := mux.NewRouter()
 
-	server := server.NewServer(db, mux)
+	server := server.NewServer(&svc, mux)
 	server.AttachRoutes()
 	server.Run()
 }

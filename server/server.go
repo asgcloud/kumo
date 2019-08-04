@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/asgcloud/kumo/db"
+	"github.com/asgcloud/kumo/storage"
 	"github.com/gorilla/mux"
 )
 
@@ -17,23 +16,17 @@ const (
 
 // Server is a struct for a web server
 type Server struct {
-	db     *db.PostgresRepository
+	svc    storage.Service
 	router *mux.Router
-	stats  UptimeStats
+	stats  *UptimeStats
 }
 
 // NewServer creates a server and attaches the db and router
-func NewServer(db *db.PostgresRepository, router *mux.Router) *Server {
+func NewServer(db *storage.Service, router *mux.Router) *Server {
 	server := Server{}
-	server.db = db
+	server.svc = *db
 	server.router = router
-	server.stats = UptimeStats{
-		Status:              "OK",
-		StartTime:           time.Now().String(),
-		RequestsReceived:    0,
-		ResponsesProvided:   0,
-		OperationsCompleted: 0,
-	}
+	server.stats = NewUptimeStats()
 	return &server
 }
 
@@ -53,15 +46,14 @@ func (s *Server) Run() {
 // HandleStatus returns statistics on the health and activity of the api
 func (s *Server) HandleStatus() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.stats.RequestsReceived++
-		s.stats.OperationsCompleted++
+		s.stats.Update("requests", "operations")
 		log.Printf("Request to status received")
-		s.stats.ResponsesProvided++
+		s.stats.Update("responses")
 		data, _ := json.Marshal(s.stats)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(data)
-		s.stats.OperationsCompleted++
+		s.stats.Update("operations")
 		return
 	}
 }
@@ -69,10 +61,9 @@ func (s *Server) HandleStatus() http.HandlerFunc {
 // HandleListServers lists all servers in the database
 func (s *Server) HandleListServers() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.stats.RequestsReceived++
-		s.stats.OperationsCompleted++
+		s.stats.Update("requests", "operations")
 		log.Printf("Request to list servers received")
-		servers, err := s.db.ListServers(context.Background(), 0, 10)
+		servers, err := s.svc.ListServers(context.Background(), 0, 10)
 		if err != nil {
 			//TODO better
 			panic(err)
@@ -81,8 +72,7 @@ func (s *Server) HandleListServers() http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(data)
-		s.stats.ResponsesProvided++
-		s.stats.OperationsCompleted++
+		s.stats.Update("responses", "operations")
 		return
 	}
 }
