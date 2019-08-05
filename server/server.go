@@ -34,6 +34,7 @@ func NewServer(db *storage.Service, router *mux.Router) *Server {
 func (s *Server) AttachRoutes() {
 	s.router.HandleFunc("/status", s.HandleStatus())
 	s.router.HandleFunc("/servers", s.HandleListServers())
+	s.router.HandleFunc("/servers/{serverName}", s.HandleServerByName())
 }
 
 // Run starts the server
@@ -63,7 +64,7 @@ func (s *Server) HandleListServers() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.stats.Update("requests", "operations")
 		log.Printf("Request to list servers received")
-		servers, err := s.svc.ListServers(context.Background(), 0, 10)
+		servers, err := s.svc.FindAllServers(context.Background(), 0, 10)
 		if err != nil {
 			//TODO better
 			panic(err)
@@ -73,6 +74,25 @@ func (s *Server) HandleListServers() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Write(data)
 		s.stats.Update("responses", "operations")
-		return
+	}
+}
+
+// HandleServerByName queries the servers by server name
+func (s *Server) HandleServerByName() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.stats.Update("requests", "operations")
+		vars := mux.Vars(r)
+		serverName := vars["serverName"]
+		log.Printf("Request to find %s", serverName)
+		server, err := s.svc.FindServerByName(context.Background(), serverName)
+		if err != nil {
+			//TODO better
+			panic(err)
+		}
+		data, _ := json.Marshal(server)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(data)
+		s.stats.Update("responses", "operations")
 	}
 }

@@ -2,69 +2,69 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
+	"errors"
 
 	// This loads the postgres drivers.
+	pg "github.com/go-pg/pg"
 	_ "github.com/lib/pq"
 
 	"github.com/asgcloud/kumo/schema"
 	"github.com/asgcloud/kumo/storage"
 )
 
-type postgres struct{ db *sql.DB }
+type postgres struct{ db *pg.DB }
 
 // New connects to a new session of postgres
 func New(host, port, user, password, dbName string) (storage.Service, error) {
 
-	connect := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbName)
-
-	db, err := sql.Open("postgres", connect)
-	if err != nil {
-		return nil, err
+	opts := &pg.Options{
+		User:     user,
+		Password: password,
+		Addr:     host + ":" + port,
+		Database: dbName,
 	}
 
-	err = db.Ping()
-	if err != nil {
-		return nil, err
+	db := pg.Connect(opts)
+	if db == nil {
+		return nil, errors.New("failed to connect to database")
 	}
 
 	return &postgres{db}, nil
 }
 
 // Close closes the database connection
-func (p *postgres) Close() {
-	p.db.Close()
-}
-
-// InsertServer adds a new server to the database
-func (p *postgres) InsertServer(ctx context.Context, server schema.Server) error {
-	_, err := p.db.Query("INSERT INTO servers (server_id, server_name) VALUES ($1, $2)", server.ServerID, server.ServerName)
+func (p *postgres) Close() error {
+	err := p.db.Close()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// ListServers lists all servers
-func (p *postgres) ListServers(ctx context.Context, skip uint64, take uint64) ([]schema.Server, error) {
-	servers := []schema.Server{}
-	//rows, err := p.db.Query("SELECT * FROM servers ORDER BY server_id DESC OFFSET $2 LIMIT $3", skip, take)
-	rows, err := p.db.Query("SELECT * FROM servers ORDER BY server_name")
+// InsertServer adds a new server to the database
+func (p *postgres) InsertServer(ctx context.Context, server schema.Server) error {
+	return p.db.Insert(server)
+}
+
+// FindAllServers returns all servers
+func (p *postgres) FindAllServers(ctx context.Context, skip uint64, take uint64) ([]schema.Server, error) {
+
+	var servers []schema.Server
+
+	err := p.db.Model(&servers).Select()
 	if err != nil {
-		fmt.Println("ERROR!!!!!")
 		return nil, err
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		server := schema.Server{}
-		err := rows.Scan(&server.ServerID, &server.ProjectID, &server.ServerName, &server.CPU, &server.RAM, &server.Storage, &server.Status, &server.State, &server.Tenancy, &server.Host)
-		if err != nil {
-			return nil, err
-		}
-		servers = append(servers, server)
-	}
 	return servers, nil
+}
+
+// FindServerByName queries the database for an individual server by its name
+func (p *postgres) FindServerByName(ctx context.Context, name string) (schema.Server, error) {
+	server := &schema.Server{}
+	err := p.db.Model(server).Where("server_name = ?", name).Select()
+	if err != nil {
+		return schema.Server{}, err
+	}
+	return *server, nil
 }
